@@ -1,0 +1,16 @@
+.border{
+    border: 2px solid gray;
+    margin: 3px;
+}
+.flex{
+    display: flex;
+}
+.justifyc{
+    justify-content: center;
+}
+.alignc{
+    align-items: center;
+}
+.p1{
+    padding: 10px;
+}
