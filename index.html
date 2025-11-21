@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="vxiewport" content="width=device-width, initial-scale=1.0">
     <title>Safe Learners</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,6 +17,13 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+   (function(){
+      // ⚠️ PASTE YOUR PUBLIC KEY HERE (e.g., "user_XyZ123...")
+      emailjs.init("bvBVOihI5gVv7jdVi"); 
+   })();
+</script>
     <style>
         /* --- WALLET PAGE STYLES --- */
         .breadcrumbs {
@@ -5517,6 +5524,22 @@
 
 
         /* --- END: ADD FOR USER DETAILS MODAL --- */
+
+/* --- PENDING APPROVAL BANNER --- */
+.pending-approval-banner {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.pending-approval-banner i {
+    font-size: 20px;
+}
     </style>
 </head>
 
@@ -6731,6 +6754,16 @@
                         <a href="#" class="back-link" data-view="instructor-pricing-view"><i
                                 class="fas fa-chevron-left"></i> Pricing</a>
                         <h2>Lesson Pricing (Auto)</h2>
+                    </div>
+                    <div id="price-pending-banner" class="pending-approval-banner" style="display: none;">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <strong>Price Change Pending Approval</strong>
+                            <p style="margin: 0; font-size: 13px;">
+                                You requested a change to <strong>$<span id="pending-price-display">0.00</span></strong>. 
+                                This is awaiting admin approval.
+                            </p>
+                        </div>
                     </div>
                     <div class="edit-price-container">
                         <div class="edit-price-main">
@@ -10104,10 +10137,10 @@
                                     const instructorDetails = document.getElementById('admin-instructor-booking-details-container');
                                     const learnerList = document.getElementById('admin-learner-list-container');
                                     const learnerDetails = document.getElementById('admin-learner-booking-details-container');
-                                    if(instructorList) instructorList.style.display = 'block';
-                                    if(instructorDetails) instructorDetails.style.display = 'none';
-                                     if(learnerList) learnerList.style.display = 'block'; // Make sure learner list is visible initially in its tab
-                                    if(learnerDetails) learnerDetails.style.display = 'none';
+                                    if (instructorList) instructorList.style.display = 'block';
+                                    if (instructorDetails) instructorDetails.style.display = 'none';
+                                    if (learnerList) learnerList.style.display = 'block'; // Make sure learner list is visible initially in its tab
+                                    if (learnerDetails) learnerDetails.style.display = 'none';
                                     // Activate instructor tab by default
                                     const instructorTab = bookingsView.querySelector('.tabs .tab-link[data-target="admin-instructor-tab-content"]');
                                     const learnerTab = bookingsView.querySelector('.tabs .tab-link[data-target="admin-learner-tab-content"]');
@@ -10115,16 +10148,16 @@
                                     const learnerPane = document.getElementById('admin-learner-tab-content');
                                     if (instructorTab) instructorTab.classList.add('active');
                                     if (learnerTab) learnerTab.classList.remove('active');
-                                    if (instructorPane) { instructorPane.style.display = 'block'; instructorPane.classList.add('active');}
-                                    if (learnerPane) { learnerPane.style.display = 'none'; learnerPane.classList.remove('active');}
+                                    if (instructorPane) { instructorPane.style.display = 'block'; instructorPane.classList.add('active'); }
+                                    if (learnerPane) { learnerPane.style.display = 'none'; learnerPane.classList.remove('active'); }
 
                                     renderInstructorListForBookingView(); // Load initial list
                                 }
-                                
+
                                 else if (targetView === 'super-admin-notifications') {
                                     notificationsView.style.display = 'block';
                                     // 💡 MAKE SURE THIS LINE IS PRESENT:
-                                    renderAdminNotifications(); 
+                                    renderAdminNotifications();
                                 }
 
                                 else { // Default to verifications view
@@ -10240,55 +10273,55 @@
         }
 
         // --- ADD THIS SINGLE REPLACEMENT LISTENER ---
-// Handles View Instructor Bookings, View Learner Bookings, and Back buttons within the Admin Bookings View
-document.getElementById('super-admin-bookings-view')?.addEventListener('click', (e) => {
-    const viewInstructorBtn = e.target.closest('.view-instructor-bookings-btn');
-    const viewLearnerBtn = e.target.closest('.view-learner-bookings-btn');
-    const backBtn = e.target.closest('.admin-back-to-list'); // Targets BOTH back buttons now
+        // Handles View Instructor Bookings, View Learner Bookings, and Back buttons within the Admin Bookings View
+        document.getElementById('super-admin-bookings-view')?.addEventListener('click', (e) => {
+            const viewInstructorBtn = e.target.closest('.view-instructor-bookings-btn');
+            const viewLearnerBtn = e.target.closest('.view-learner-bookings-btn');
+            const backBtn = e.target.closest('.admin-back-to-list'); // Targets BOTH back buttons now
 
-    // Handle "View Instructor Bookings"
-    if (viewInstructorBtn) {
-        e.preventDefault();
-        const instructorId = viewInstructorBtn.dataset.instructorId;
-        const instructorName = viewInstructorBtn.closest('.user-control-row')?.querySelector('div:first-child')?.textContent || 'Instructor';
+            // Handle "View Instructor Bookings"
+            if (viewInstructorBtn) {
+                e.preventDefault();
+                const instructorId = viewInstructorBtn.dataset.instructorId;
+                const instructorName = viewInstructorBtn.closest('.user-control-row')?.querySelector('div:first-child')?.textContent || 'Instructor';
 
-        if (instructorId) {
-            document.getElementById('admin-instructor-list-container').style.display = 'none';
-            const detailsContainer = document.getElementById('admin-instructor-booking-details-container');
-            detailsContainer.style.display = 'block';
-            detailsContainer.querySelector('#admin-booking-details-title').textContent = `Bookings for ${instructorName}`;
-            renderAdminInstructorBookings(instructorId); // Renders into #admin-booking-display-area
-        }
-    }
-    // Handle "View Learner Bookings"
-    else if (viewLearnerBtn) {
-        e.preventDefault();
-        const learnerId = viewLearnerBtn.dataset.learnerId;
-        const learnerName = viewLearnerBtn.closest('.user-control-row')?.querySelector('div:first-child')?.textContent || 'Learner';
+                if (instructorId) {
+                    document.getElementById('admin-instructor-list-container').style.display = 'none';
+                    const detailsContainer = document.getElementById('admin-instructor-booking-details-container');
+                    detailsContainer.style.display = 'block';
+                    detailsContainer.querySelector('#admin-booking-details-title').textContent = `Bookings for ${instructorName}`;
+                    renderAdminInstructorBookings(instructorId); // Renders into #admin-booking-display-area
+                }
+            }
+            // Handle "View Learner Bookings"
+            else if (viewLearnerBtn) {
+                e.preventDefault();
+                const learnerId = viewLearnerBtn.dataset.learnerId;
+                const learnerName = viewLearnerBtn.closest('.user-control-row')?.querySelector('div:first-child')?.textContent || 'Learner';
 
-        if (learnerId) {
-            document.getElementById('admin-learner-list-container').style.display = 'none';
-            const detailsContainer = document.getElementById('admin-learner-booking-details-container');
-            detailsContainer.style.display = 'block';
-            detailsContainer.querySelector('#admin-learner-booking-details-title').textContent = `Bookings for ${learnerName}`;
-            renderAdminLearnerBookings(learnerId); // Renders into #admin-learner-booking-display-area
-        }
-    }
-    // Handle "Back" buttons (Handles both instructor and learner back buttons)
-    else if (backBtn) {
-        e.preventDefault();
-        // Get the specific list and details containers from the button's data attributes
-        const listContainerId = backBtn.dataset.list;
-        const detailsContainerId = backBtn.dataset.details;
-        const listContainer = document.getElementById(listContainerId);
-        const detailsContainer = document.getElementById(detailsContainerId);
+                if (learnerId) {
+                    document.getElementById('admin-learner-list-container').style.display = 'none';
+                    const detailsContainer = document.getElementById('admin-learner-booking-details-container');
+                    detailsContainer.style.display = 'block';
+                    detailsContainer.querySelector('#admin-learner-booking-details-title').textContent = `Bookings for ${learnerName}`;
+                    renderAdminLearnerBookings(learnerId); // Renders into #admin-learner-booking-display-area
+                }
+            }
+            // Handle "Back" buttons (Handles both instructor and learner back buttons)
+            else if (backBtn) {
+                e.preventDefault();
+                // Get the specific list and details containers from the button's data attributes
+                const listContainerId = backBtn.dataset.list;
+                const detailsContainerId = backBtn.dataset.details;
+                const listContainer = document.getElementById(listContainerId);
+                const detailsContainer = document.getElementById(detailsContainerId);
 
-        // Hide details, show list
-        if (detailsContainer) detailsContainer.style.display = 'none';
-        if (listContainer) listContainer.style.display = 'block';
-    }
-});
-// --- END: REPLACEMENT LISTENER ---
+                // Hide details, show list
+                if (detailsContainer) detailsContainer.style.display = 'none';
+                if (listContainer) listContainer.style.display = 'block';
+            }
+        });
+        // --- END: REPLACEMENT LISTENER ---
 
         // Also, make the new "Find an Instructor" button work
         document.addEventListener('click', (e) => {
@@ -10941,53 +10974,7 @@ document.getElementById('super-admin-bookings-view')?.addEventListener('click', 
             });
         }
 
-        // --- START: REPLACEMENT FOR PRICING SAVE LOGIC ---
-        const savePriceBtn = document.getElementById('save-price-changes-btn');
-        if (savePriceBtn) {
-            savePriceBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
 
-                if (!auth.currentUser) {
-                    alert("Authentication error. Please log in again.");
-                    return;
-                }
-
-                const uid = auth.currentUser.uid;
-                const newPrice = parseFloat(document.getElementById('hourly-lesson-price').value);
-
-                if (isNaN(newPrice) || newPrice <= 0) {
-                    alert("Please enter a valid price.");
-                    return;
-                }
-
-                try {
-                    // Update the pricing object in the instructor's user document
-                    await db.collection('users').doc(uid).set({
-                        pricing: {
-                            lesson: newPrice,
-                            // Assuming a test package is 3x the hourly rate for this example
-                            testPackage: newPrice * 3
-                        }
-                    }, { merge: true }); // Use merge: true to avoid overwriting other user data
-
-                    // --- The rest of this is the same as before ---
-                    if (priceElementToUpdate) {
-                        priceElementToUpdate.textContent = `$${newPrice.toFixed(2)}`;
-                    }
-                    showView('instructor-pricing-view');
-                    const successMsg = document.getElementById('price-update-success-msg');
-                    if (successMsg) {
-                        successMsg.style.display = 'flex';
-                        setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
-                        successMsg.querySelector('.close-btn').onclick = () => { successMsg.style.display = 'none'; };
-                    }
-
-                } catch (error) {
-                    console.error("Error saving price: ", error);
-                    alert("Could not save the new price. Please try again.");
-                }
-            });
-        }
         // --- END: REPLACEMENT FOR PRICING SAVE LOGIC ---
         // --- END: EDIT PRICING LOGIC ---
         // --- START: CREATE EVENT DROPDOWN LOGIC ---
@@ -14673,52 +14660,52 @@ document.getElementById('super-admin-bookings-view')?.addEventListener('click', 
  * Fetches and displays bookings (upcoming, past) for a specific learner in the Admin view.
  * @param {string} learnerId - The UID of the learner whose bookings to display.
  */
-async function renderAdminLearnerBookings(learnerId) {
-    // Target the specific display area within the learner details container
-    const displayArea = document.getElementById('admin-learner-booking-display-area');
-    if (!displayArea) {
-         console.error("Error: Container '#admin-learner-booking-display-area' not found."); // Add error log
-         return;
-    }
-
-    displayArea.innerHTML = `<p style="padding: 20px;">Loading bookings...</p>`;
-
-    try {
-        const bookingsSnapshot = await db.collection('bookings')
-            .where('learnerId', '==', learnerId) // Query by learnerId
-            .orderBy('createdAt', 'desc')
-            .get();
-
-        if (bookingsSnapshot.empty) {
-            displayArea.innerHTML = `<p style="padding: 20px;">No bookings found for this learner.</p>`;
-            return;
-        }
-
-        const today = moment().startOf('day');
-        let upcomingHtml = '';
-        let pastHtml = '';
-
-        // Loop and categorize (similar to instructor function)
-        bookingsSnapshot.forEach(doc => {
-            const booking = doc.data();
-            const bookingId = doc.id;
-            let bookingDateMoment;
-
-            // Handle date formats
-            if (booking.date && typeof booking.date.toDate === 'function') {
-                bookingDateMoment = moment(booking.date.toDate());
-            } else if (typeof booking.date === 'string') {
-                bookingDateMoment = moment(booking.date, 'ddd, D MMM YYYY');
-            } else {
-                 console.warn(`Booking ${bookingId} for learner ${learnerId} skipped due to invalid date format.`); // Add warning log
-                return; // Skip invalid date
+        async function renderAdminLearnerBookings(learnerId) {
+            // Target the specific display area within the learner details container
+            const displayArea = document.getElementById('admin-learner-booking-display-area');
+            if (!displayArea) {
+                console.error("Error: Container '#admin-learner-booking-display-area' not found."); // Add error log
+                return;
             }
 
-            const displayDate = bookingDateMoment.format('ddd, D MMM YYYY');
-            const statusClass = booking.status ? `status-${booking.status.toLowerCase()}` : 'status-pending';
+            displayArea.innerHTML = `<p style="padding: 20px;">Loading bookings...</p>`;
 
-            // Include Instructor Name in the row
-            const rowHtml = `
+            try {
+                const bookingsSnapshot = await db.collection('bookings')
+                    .where('learnerId', '==', learnerId) // Query by learnerId
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                if (bookingsSnapshot.empty) {
+                    displayArea.innerHTML = `<p style="padding: 20px;">No bookings found for this learner.</p>`;
+                    return;
+                }
+
+                const today = moment().startOf('day');
+                let upcomingHtml = '';
+                let pastHtml = '';
+
+                // Loop and categorize (similar to instructor function)
+                bookingsSnapshot.forEach(doc => {
+                    const booking = doc.data();
+                    const bookingId = doc.id;
+                    let bookingDateMoment;
+
+                    // Handle date formats
+                    if (booking.date && typeof booking.date.toDate === 'function') {
+                        bookingDateMoment = moment(booking.date.toDate());
+                    } else if (typeof booking.date === 'string') {
+                        bookingDateMoment = moment(booking.date, 'ddd, D MMM YYYY');
+                    } else {
+                        console.warn(`Booking ${bookingId} for learner ${learnerId} skipped due to invalid date format.`); // Add warning log
+                        return; // Skip invalid date
+                    }
+
+                    const displayDate = bookingDateMoment.format('ddd, D MMM YYYY');
+                    const statusClass = booking.status ? `status-${booking.status.toLowerCase()}` : 'status-pending';
+
+                    // Include Instructor Name in the row
+                    const rowHtml = `
                <div class="history-table-row" style="grid-template-columns: 1fr 1.5fr 1.5fr 1fr 1fr 1fr;">
                    <div>#${bookingId.substring(0, 7)}</div>
                    <div>${booking.instructorName || 'N/A'}</div>
@@ -14728,15 +14715,15 @@ async function renderAdminLearnerBookings(learnerId) {
                    <div><span class="status-badge ${statusClass}">${booking.status || 'PENDING'}</span></div>
                </div>`;
 
-            if (bookingDateMoment.isSameOrAfter(today) && booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') {
-                upcomingHtml += rowHtml;
-            } else {
-                pastHtml += rowHtml;
-            }
-        });
+                    if (bookingDateMoment.isSameOrAfter(today) && booking.status !== 'COMPLETED' && booking.status !== 'CANCELLED') {
+                        upcomingHtml += rowHtml;
+                    } else {
+                        pastHtml += rowHtml;
+                    }
+                });
 
-        // Render the categorized lists
-        displayArea.innerHTML = `
+                // Render the categorized lists
+                displayArea.innerHTML = `
            <div class="card" style="margin-bottom: 20px; padding: 0;">
                <h4 style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); margin:0;">Upcoming / Pending Bookings</h4>
                <div class="history-table" style="font-size: 14px;">
@@ -14768,14 +14755,14 @@ async function renderAdminLearnerBookings(learnerId) {
            </div>
        `;
 
-    } catch (error) {
-        console.error("Error fetching learner bookings for admin:", error);
-        displayArea.innerHTML = `<p style="padding: 20px; color: red;">Could not load bookings.</p>`;
-    }
-}
+            } catch (error) {
+                console.error("Error fetching learner bookings for admin:", error);
+                displayArea.innerHTML = `<p style="padding: 20px; color: red;">Could not load bookings.</p>`;
+            }
+        }
 
         // --- START: ADD FOR VIEWING INSTRUCTOR BOOKINGS (Admin) ---
-        
+
         // --- END: ADD FOR VIEWING INSTRUCTOR BOOKINGS (Admin) ---
 
         /**
@@ -15172,110 +15159,132 @@ async function renderAdminLearnerBookings(learnerId) {
         }
 
         /**
-         * Handles saving updated profile details and optional password change from the new form.
-         * @param {Event} e - The form submission event.
-         */
-        async function updateAccountSettings(e) {
-            e.preventDefault(); // Prevent default form submission
-            console.log("--- updateAccountSettings started ---");
+ * Handles saving updated profile details and optional password change from the new form.
+ * @param {Event} e - The form submission event.
+ */
+async function updateAccountSettings(e) {
+    e.preventDefault(); // Prevent default form submission
+    console.log("--- updateAccountSettings started ---");
 
-            const user = auth.currentUser;
-            if (!user) {
-                alert("Authentication error. Please log in again.");
-                return;
-            }
-            console.log("Authenticated user:", user.uid);
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Authentication error. Please log in again.");
+        return;
+    }
+    console.log("Authenticated user:", user.uid);
 
-            const form = document.getElementById('account-settings-form');
-            if (!form) {
-                console.error("Account settings form not found!");
-                return;
-            }
+    const form = document.getElementById('account-settings-form');
+    if (!form) {
+        console.error("Account settings form not found!");
+        return;
+    }
 
-            // --- Part 1: Update Profile Details (Firestore) ---
-            const updatedProfileData = {
-                firstName: form.querySelector('#as-first-name').value.trim(),
-                surname: form.querySelector('#as-surname').value.trim(),
-                mobile: form.querySelector('#as-mobile').value.trim(),
-                dob: form.querySelector('#as-dob').value.trim(), // Storing as YYYY-MM-DD
-                gender: form.querySelector('#as-gender').value,
-                pincode: form.querySelector('#as-pincode').value.trim(), // Add pincode if needed
-                lastProfileUpdate: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            console.log("Profile data to save:", updatedProfileData);
+    // --- Part 1: Update Profile Details (Firestore) ---
+    const updatedProfileData = {
+        firstName: form.querySelector('#as-first-name').value.trim(),
+        surname: form.querySelector('#as-surname').value.trim(),
+        mobile: form.querySelector('#as-mobile').value.trim(),
+        dob: form.querySelector('#as-dob').value.trim(), // Storing as YYYY-MM-DD
+        gender: form.querySelector('#as-gender').value,
+        pincode: form.querySelector('#as-pincode').value.trim(), // Add pincode if needed
+        lastProfileUpdate: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    console.log("Profile data to save:", updatedProfileData);
 
-            let profileUpdateSuccess = false;
-            try {
-                console.log("Attempting Firestore update...");
-                await db.collection('users').doc(user.uid).update(updatedProfileData);
-                console.log("Firestore profile update successful.");
-                profileUpdateSuccess = true;
-                // Update display name in header immediately
-                const userNameElement = document.getElementById('instructor-user-name');
-                if (userNameElement) userNameElement.textContent = updatedProfileData.firstName;
+    let profileUpdateSuccess = false;
+    try {
+        console.log("Attempting Firestore update...");
+        
+        // 1. Update the User Document
+        await db.collection('users').doc(user.uid).update(updatedProfileData);
+        
+        // ---------------------------------------------------------
+        // START: NEW CODE TO SEND NOTIFICATION TO SUPER ADMIN
+        // ---------------------------------------------------------
+        const notificationData = {
+            title: 'Instructor Profile Update',
+            body: `${updatedProfileData.firstName} ${updatedProfileData.surname} has updated their account details.`,
+            type: 'profile_update', // This triggers the 'user-edit' icon in your admin view
+            instructorId: user.uid,
+            read: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-            } catch (error) {
-                console.error("Firestore update FAILED:", error);
-                alert("❌ Could not update your profile details. Check console.");
-                // Optional: return;
-            }
+        await db.collection('adminNotifications').add(notificationData);
+        console.log("Admin notification sent.");
+        // ---------------------------------------------------------
+        // END: NEW CODE
+        // ---------------------------------------------------------
 
-            // --- Part 2: Handle Password Change (Firebase Auth) ---
-            const newPassword = form.querySelector('#as-new-password').value;
-            const confirmPassword = form.querySelector('#as-confirm-password').value;
-            const currentPassword = form.querySelector('#as-current-password').value;
-            console.log(`Password fields - New: ${newPassword ? 'Filled' : 'Empty'}, Confirm: ${confirmPassword ? 'Filled' : 'Empty'}, Current: ${currentPassword ? 'Filled' : 'Empty'}`);
+        console.log("Firestore profile update successful.");
+        profileUpdateSuccess = true;
+        // Update display name in header immediately
+        const userNameElement = document.getElementById('instructor-user-name');
+        if (userNameElement) userNameElement.textContent = updatedProfileData.firstName;
 
-            if (newPassword) {
-                console.log("Attempting password change...");
-                if (newPassword !== confirmPassword) {
-                    alert("❌ New passwords do not match."); return;
-                }
-                if (newPassword.length < 6) {
-                    alert("❌ New password must be at least 6 characters."); return;
-                }
-                if (!currentPassword) {
-                    alert("❌ Please enter your current password to change it."); return;
-                }
+    } catch (error) {
+        console.error("Firestore update FAILED:", error);
+        alert("❌ Could not update your profile details. Check console.");
+        // Optional: return;
+    }
 
-                try {
-                    const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
-                    console.log("Attempting re-authentication...");
-                    await user.reauthenticateWithCredential(credential);
-                    console.log("Re-authentication successful.");
+    // --- Part 2: Handle Password Change (Firebase Auth) ---
+    const newPassword = form.querySelector('#as-new-password').value;
+    const confirmPassword = form.querySelector('#as-confirm-password').value;
+    const currentPassword = form.querySelector('#as-current-password').value;
+    console.log(`Password fields - New: ${newPassword ? 'Filled' : 'Empty'}, Confirm: ${confirmPassword ? 'Filled' : 'Empty'}, Current: ${currentPassword ? 'Filled' : 'Empty'}`);
 
-                    console.log("Attempting password update...");
-                    await user.updatePassword(newPassword);
-                    console.log("Firebase Auth password update successful.");
-                    alert("✅ Password updated successfully!");
-
-                    form.querySelector('#as-new-password').value = '';
-                    form.querySelector('#as-confirm-password').value = '';
-                    form.querySelector('#as-current-password').value = '';
-
-                } catch (error) {
-                    console.error("Password change FAILED:", error);
-                    let errorMsg = "❌ Could not change password. ";
-                    if (error.code === 'auth/wrong-password') errorMsg += "Incorrect current password.";
-                    else if (error.code === 'auth/weak-password') errorMsg += "New password is too weak.";
-                    else if (error.code === 'auth/requires-recent-login') errorMsg += "Security check failed. Please log out and log back in.";
-                    else errorMsg += "Check console.";
-                    alert(errorMsg);
-                    return;
-                }
-            } else {
-                console.log("No new password entered, skipping password change.");
-            }
-
-            // --- Part 3: Final Success Message ---
-            if (profileUpdateSuccess && !newPassword) {
-                alert("✅ Account settings updated successfully!");
-            } else if (profileUpdateSuccess && newPassword) {
-                // Password success alert was already shown
-                console.log("Profile and password updated successfully.");
-            }
-            console.log("--- updateAccountSettings finished ---");
+    if (newPassword) {
+        console.log("Attempting password change...");
+        if (newPassword !== confirmPassword) {
+            alert("❌ New passwords do not match."); return;
         }
+        if (newPassword.length < 6) {
+            alert("❌ New password must be at least 6 characters."); return;
+        }
+        if (!currentPassword) {
+            alert("❌ Please enter your current password to change it."); return;
+        }
+
+        try {
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+            console.log("Attempting re-authentication...");
+            await user.reauthenticateWithCredential(credential);
+            console.log("Re-authentication successful.");
+
+            console.log("Attempting password update...");
+            await user.updatePassword(newPassword);
+            console.log("Firebase Auth password update successful.");
+            alert("✅ Password updated successfully!");
+
+            form.querySelector('#as-new-password').value = '';
+            form.querySelector('#as-confirm-password').value = '';
+            form.querySelector('#as-current-password').value = '';
+
+        } catch (error) {
+            console.error("Password change FAILED:", error);
+            let errorMsg = "❌ Could not change password. ";
+            if (error.code === 'auth/wrong-password') errorMsg += "Incorrect current password.";
+            else if (error.code === 'auth/weak-password') errorMsg += "New password is too weak.";
+            else if (error.code === 'auth/requires-recent-login') errorMsg += "Security check failed. Please log out and log back in.";
+            else errorMsg += "Check console.";
+            alert(errorMsg);
+            return;
+        }
+    } else {
+        console.log("No new password entered, skipping password change.");
+    }
+
+    // --- Part 3: Final Success Message ---
+    if (profileUpdateSuccess && !newPassword) {
+        alert("✅ Account settings updated successfully!");
+    } else if (profileUpdateSuccess && newPassword) {
+        // Password success alert was already shown
+        console.log("Profile and password updated successfully.");
+    }
+    console.log("--- updateAccountSettings finished ---");
+}
+        
 
         // --- Direct Listener Attachment for the NEW form ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -15370,38 +15379,38 @@ async function renderAdminLearnerBookings(learnerId) {
         /**
  * Fetches and displays a list of learners in the Admin Controls -> Learners tab.
  */
-async function renderLearnerListForBookingView() {
-    // Target the specific container inside the learner tab pane
-    const container = document.getElementById('learner-bookings-list');
-    if (!container) {
-        console.error("Error: Container '#learner-bookings-list' not found."); // Add error log
-        return;
-    }
+        async function renderLearnerListForBookingView() {
+            // Target the specific container inside the learner tab pane
+            const container = document.getElementById('learner-bookings-list');
+            if (!container) {
+                console.error("Error: Container '#learner-bookings-list' not found."); // Add error log
+                return;
+            }
 
-    container.innerHTML = `<p style="padding: 20px;">Loading learners...</p>`;
+            container.innerHTML = `<p style="padding: 20px;">Loading learners...</p>`;
 
-    try {
-        const snapshot = await db.collection('users')
-            .where('role', '==', 'learner')
-            .get();
+            try {
+                const snapshot = await db.collection('users')
+                    .where('role', '==', 'learner')
+                    .get();
 
-        if (snapshot.empty) {
-            container.innerHTML = `<p style="padding: 20px;">No learners found.</p>`;
-            return;
-        }
+                if (snapshot.empty) {
+                    container.innerHTML = `<p style="padding: 20px;">No learners found.</p>`;
+                    return;
+                }
 
-        // Header for the list
-        let listHtml = `
+                // Header for the list
+                let listHtml = `
                <div class="user-control-header" style="grid-template-columns: 2fr 2fr 1fr;">
                    <div>Name</div>
                    <div>Email</div>
                    <div>Action</div>
                </div>`;
 
-        snapshot.forEach(doc => {
-            const learner = doc.data();
-            const uid = doc.id;
-            listHtml += `
+                snapshot.forEach(doc => {
+                    const learner = doc.data();
+                    const uid = doc.id;
+                    listHtml += `
                    <div class="user-control-row" style="grid-template-columns: 2fr 2fr 1fr;">
                        <div>${learner.firstName || 'N/A'} ${learner.surname || ''}</div>
                        <div>${learner.email}</div>
@@ -15409,16 +15418,16 @@ async function renderLearnerListForBookingView() {
                            <button class="btn btn-secondary btn-small view-learner-bookings-btn" data-learner-id="${uid}">View Bookings</button>
                        </div>
                    </div>`;
-        });
-        container.innerHTML = listHtml;
+                });
+                container.innerHTML = listHtml;
 
-    } catch (error) {
-        console.error("Error fetching learners for booking view:", error);
-        container.innerHTML = `<p style="padding: 20px; color: red;">Could not load learners.</p>`;
-    }
-}
+            } catch (error) {
+                console.error("Error fetching learners for booking view:", error);
+                container.innerHTML = `<p style="padding: 20px; color: red;">Could not load learners.</p>`;
+            }
+        }
 
- async function renderAdminNotifications() {
+        async function renderAdminNotifications() {
     const listContainer = document.getElementById('admin-notifications-list');
     if (!listContainer) return;
 
@@ -15445,15 +15454,15 @@ async function renderLearnerListForBookingView() {
             const unreadClass = isUnread ? 'unread' : '';
             const icon = notification.type === 'profile_update' ? 'fas fa-user-edit' : 'fas fa-info-circle';
             
+            // --- MODIFIED LINE BELOW: Added data-instructor-id ---
             notificationsHtml += `
-                <div class="notification-item ${unreadClass}" data-id="${notificationId}">
+                <div class="notification-item ${unreadClass}" data-id="${notificationId}" data-instructor-id="${notification.instructorId || ''}" style="cursor: pointer;">
                     <div class="notification-icon"><i class="${icon}"></i></div>
                     <div class="notification-details">
                         <p><strong>${notification.title}</strong></p>
                         <p>${notification.body}</p>
                         <span class="notification-time">Received ${timeAgo}</span>
                     </div>
-                    <i class="fas fa-chevron-right"></i>
                 </div>
             `;
         });
@@ -15467,6 +15476,159 @@ async function renderLearnerListForBookingView() {
 }
 
 
+// ============================================================
+// START: NEW PRICING APPROVAL SYSTEM (Copy and Paste this)
+// ============================================================
+
+/**
+ * FUNCTION 1: Check for Pending Requests
+ * This runs when you open the "Edit Price" page.
+ * If a request is found, it locks the form and shows the yellow banner.
+ */
+ async function checkPendingPriceRequests() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const banner = document.getElementById('price-pending-banner');
+    const priceInput = document.getElementById('hourly-lesson-price');
+    const saveBtn = document.getElementById('save-price-changes-btn');
+    const pendingDisplay = document.getElementById('pending-price-display');
+
+    // If we aren't on the right page, stop
+    if (!banner || !priceInput || !saveBtn) return;
+
+    try {
+        // Look for a 'pending' request for this instructor
+        const snapshot = await db.collection('priceChangeRequests')
+            .where('instructorId', '==', user.uid)
+            .where('status', '==', 'pending')
+            .limit(1)
+            .get();
+
+        if (!snapshot.empty) {
+            // --- SCENARIO A: A REQUEST IS PENDING ---
+            const requestData = snapshot.docs[0].data();
+            
+            // 1. Show the yellow banner
+            banner.style.display = 'flex';
+            if (pendingDisplay) pendingDisplay.textContent = requestData.newPrice.toFixed(2);
+            
+            // 2. Lock the input field
+            priceInput.value = requestData.newPrice; 
+            priceInput.disabled = true;
+            priceInput.style.backgroundColor = "#f0f0f0";
+            
+            // 3. Lock the button
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Request Pending Approval";
+            saveBtn.classList.add('btn-disabled');
+        } else {
+            // --- SCENARIO B: NO REQUEST PENDING ---
+            // Reset everything to normal
+            banner.style.display = 'none';
+            priceInput.disabled = false;
+            priceInput.style.backgroundColor = "#fff";
+            
+            saveBtn.disabled = false;
+            saveBtn.textContent = "Save Changes";
+            saveBtn.classList.remove('btn-disabled');
+        }
+    } catch (error) {
+        console.error("Error checking pending requests:", error);
+    }
+}
+
+/**
+ * FUNCTION 2: Watch for Navigation
+ * This detects when you click "Edit" on the main pricing card
+ * and triggers the check function above.
+ */
+document.addEventListener('click', (e) => {
+    // If the user clicks the "Edit" button (pencil icon)
+    if (e.target.closest('.pricing-value .btn')) {
+        // Wait a split second for the view to switch, then check DB
+        setTimeout(checkPendingPriceRequests, 100);
+    }
+});
+
+/**
+ * FUNCTION 3: Handle the "Save Changes" Click
+ * This sends the request and the email.
+ */
+/**
+ * FUNCTION 3: Handle Save Click & Send Email (REAL VERSION)
+ */
+ document.addEventListener('DOMContentLoaded', () => {
+    const savePriceBtn = document.getElementById('save-price-changes-btn');
+
+    if (savePriceBtn) {
+        // 1. Clone button to wipe out any old event listeners
+        const newSaveBtn = savePriceBtn.cloneNode(true);
+        savePriceBtn.parentNode.replaceChild(newSaveBtn, savePriceBtn);
+
+        // 2. Add the NEW listener
+        newSaveBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            const user = auth.currentUser;
+            if (!user) return alert("Please log in again.");
+
+            const priceInput = document.getElementById('hourly-lesson-price');
+            const newPrice = parseFloat(priceInput.value);
+            const nameElement = document.getElementById('instructor-user-name');
+            const instructorName = nameElement ? nameElement.textContent : 'Instructor';
+
+            if (isNaN(newPrice) || newPrice <= 0) return alert("Please enter a valid price.");
+
+            // Lock Button immediately
+            newSaveBtn.textContent = "Sending Request...";
+            newSaveBtn.disabled = true;
+
+            // 3. Data object for Firestore
+            const requestData = {
+                instructorId: user.uid,
+                instructorName: instructorName,
+                instructorEmail: user.email,
+                newPrice: newPrice,
+                status: 'pending',
+                requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // 4. Data object for EmailJS
+            const emailParams = {
+                to_email: 'eesiitbhu5@gmail.com', // <--- YOUR SPECIFIC EMAIL
+                subject: `Price Change Request: ${instructorName}`,
+                message: `Instructor ${instructorName} (ID: ${user.uid}) has requested a price change to $${newPrice}. Please approve in the dashboard.`
+            };
+
+            try {
+                // A. Save to Firestore
+                await db.collection('priceChangeRequests').add(requestData);
+
+                // B. Send Email via EmailJS
+                // ⚠️ REPLACE WITH YOUR ACTUAL IDs ⚠️
+                await emailjs.send('service_az09qfd', 'template_n0fguu8', emailParams);
+                
+                console.log("Email sent successfully to eesiitbhu5@gmail.com");
+
+                // C. Success UI
+                alert(`✅ Request Sent! \n\nYour price change to $${newPrice} is now pending. \nThe admin has been notified via email.`);
+                
+                // Lock the UI
+                checkPendingPriceRequests();
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Request submitted to database, but there might have been an issue sending the email.");
+                // Even if email fails, we check DB to lock the UI if the write succeeded
+                checkPendingPriceRequests(); 
+            }
+        });
+    }
+});
+// ============================================================
+// END: NEW PRICING APPROVAL SYSTEM
+// ============================================================
 
 
     </script>
